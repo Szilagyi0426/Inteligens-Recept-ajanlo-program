@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr
+
+from pydantic import BaseModel, EmailStr, Field
 
 class UserCreate(BaseModel): # Schema a felhasználó létrehozásához
     username: str
@@ -15,3 +16,11 @@ class UserOut(BaseModel): # Schema a felhasználó kimenetéhez
 class Token(BaseModel): # Schema a token kimenetéhez
     access_token: str
     token_type: str = "bearer"
+
+class UserUpdateWithPassword(BaseModel):
+    username: str | None = None
+    email: EmailStr | None = None
+    current_password: str = Field(..., min_length=6)
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr

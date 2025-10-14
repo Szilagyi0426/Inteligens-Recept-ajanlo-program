@@ -10,6 +10,7 @@ from app.models.user import User
 from app.utils.password import hash_password, verify_password
 from app.models.preference import MealPreference, UserMealPreference
 from app.models.sensitivity import FoodSensitivity, UserSensitivity
+from app.schemas.user import UserUpdateWithPassword
 
 router = APIRouter()
 
@@ -76,4 +77,25 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 @auth_router.get("/me", response_model=UserOut) # Saját adatok lekérdezése
 def read_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@auth_router.put("/me", response_model=UserOut)
+def update_me(
+    payload: UserUpdateWithPassword,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Jelszó ellenőrzése
+    if not verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(status_code=403, detail="Hibás jelszó")
+
+    # Adatok frissítése
+    if payload.username:
+        current_user.username = payload.username
+    if payload.email:
+        current_user.email = payload.email
+
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
     return current_user
