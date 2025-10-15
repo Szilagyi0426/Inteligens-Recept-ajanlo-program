@@ -22,10 +22,20 @@ export default function QueryProvider({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const [authed, setAuthed] = useState(false);
+    const [checked, setChecked] = useState(false);
 
     // auth állapot figyelése localStorage alapján
     useEffect(() => {
-        const check = () => setAuthed(!!localStorage.getItem('token'));
+        const check = () => {
+            try {
+                const has = typeof window !== 'undefined' && !!localStorage.getItem('token');
+                setAuthed(has);
+            } catch {
+                setAuthed(false);
+            } finally {
+                setChecked(true);
+            }
+        };
         check();
         window.addEventListener('storage', check);
         return () => window.removeEventListener('storage', check);
@@ -33,15 +43,16 @@ export default function QueryProvider({ children }: { children: ReactNode }) {
 
     // ha nincs token és nem az engedélyezett route-on vagyunk -> redirect a loginra
     useEffect(() => {
-        const allowlist = new Set<string>(['/', '/register-profile-setup']); // ← csak a kombinált auth oldal és setup oldal publikus
+        if (!checked) return; // avoid redirect before we know auth state
+        const allowlist = new Set<string>(['/', '/register-profile-setup']);
         if (!authed && pathname && !allowlist.has(pathname)) {
-            router.push('/');
+            router.replace('/');
         }
-    }, [authed, pathname, router]);
+    }, [checked, authed, pathname, router]);
 
     // Navbar csak auth mellett és nem a login oldalon
     const hideOnRoutes = new Set<string>(['/', '/register-profile-setup']);
-    const showNavbar = authed && !hideOnRoutes.has(pathname || '');
+    const showNavbar = checked && authed && !hideOnRoutes.has(pathname || '');
 
     return (
         <QueryClientProvider client={client}>
