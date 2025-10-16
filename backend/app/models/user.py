@@ -10,6 +10,8 @@ class User(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True) # Egyedi azonosító
     username: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # Felhasználónév
     email: Mapped[str] = mapped_column(String(254), nullable=False, index=True) # Email cím
+    full_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False) # Jelszó hashelve
     role_id: Mapped[int] = mapped_column(SmallInteger, nullable=False, server_default="0") # Felhasználói szerepkör
     created_at: Mapped[datetime] = mapped_column( # Létrehozás dátuma

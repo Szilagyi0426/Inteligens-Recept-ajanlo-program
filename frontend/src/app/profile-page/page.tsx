@@ -7,12 +7,14 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000/api/
 type OptionItem = { id: string | number; label: string };
 
 export default function ProfileDataPage() {
+    // Állapotok: betöltés/mentés és üzenetek
     const [loading, setLoading] = useState(true);
     const [savingProfile, setSavingProfile] = useState(false);
     const [savingPassword, setSavingPassword] = useState(false);
     const [msg, setMsg] = useState<string | null>(null);
     const [err, setErr] = useState<string | null>(null);
 
+    // Auth token kiolvasása (localStorage)
     const token = useMemo(() => {
         try {
             return localStorage.getItem('token') || '';
@@ -21,25 +23,24 @@ export default function ProfileDataPage() {
         }
     }, []);
 
-    // ---- User model state ----
+    // Profil adatok (megjelenítéshez és szerkesztéshez)
     const [profile, setProfile] = useState({
         username: '',
         email: '',
         full_name: '',
         phone: '',
     });
+    const [baselineEmail, setBaselineEmail] = useState('');
     const [currentPasswordForProfile, setCurrentPasswordForProfile] = useState('');
 
-    // ---- Password change state ----
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    // ---- Dynamic options (with IDs) ----
+    // Választható opciók listák (ID + címke)
     const [dietOptions, setDietOptions] = useState<OptionItem[]>([]);
     const [sensitivityOptions, setSensitivityOptions] = useState<OptionItem[]>([]);
-
-    // current user selections (MULTI-SELECT)
+    
     const [prefs, setPrefs] = useState<{ diets: Array<string | number>; sensitivities: Array<string | number> }>({
         diets: [],
         sensitivities: [],
@@ -47,9 +48,9 @@ export default function ProfileDataPage() {
 
     const [userId, setUserId] = useState<string | number | null>(null);
 
-    // Helpers
     const authHeaders: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
+    // fetch wrapper: hibakezelés + JSON parse
     const safeFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
         const res = await fetch(input, init);
         if (!res.ok) {
@@ -69,7 +70,7 @@ export default function ProfileDataPage() {
         }
     };
 
-    // Normalize various API shapes into [{id,label}]
+    // Opciók egységesítése [{id,label}] formára
     const normalizeOptions = (input: any): OptionItem[] => {
         if (!input) return [];
         const fromArray = (arr: any[]) =>
@@ -91,7 +92,7 @@ export default function ProfileDataPage() {
         return [];
     };
 
-    // ---- Load data ----
+    // Adatok betöltése oldalmegnyitáskor
     useEffect(() => {
         let cancelled = false;
         (async () => {
@@ -99,39 +100,49 @@ export default function ProfileDataPage() {
             setMsg(null);
             setErr(null);
             try {
-                // 1) Load profile (works per logs at /auth/me)
+                // Saját profil lekérése
                 const me = await safeFetch(`${API_BASE}/auth/me`, {
                     headers: { ...authHeaders },
                     cache: 'no-store',
                 });
                 if (!cancelled) {
                     setProfile({
-                        username: me?.username ?? '',
+                        username: me?.username ?? me?.user_name ?? me?.name ?? '',
                         email: me?.email ?? '',
-                        full_name: me?.full_name ?? '',
-                        phone: me?.phone ?? '',
+                        full_name: me?.full_name ?? me?.fullName ?? me?.name_full ?? '',
+                        phone: me?.phone ?? me?.phone_number ?? me?.phoneNumber ?? me?.tel ?? me?.telephone ?? '',
                     });
+                    setBaselineEmail(me?.email ?? '');
                     setUserId(me?.id ?? me?.user_id ?? null);
                 }
 
-                // 2) Load available options (lists)
+                // Preferenciák/érzékenységek listáinak lekérése
                 try {
                     // According to your logs, trailing slash on /preferences/ returns 200
                     const dietsResp = await safeFetch(`${API_BASE}/preferences/`, { headers: { ...authHeaders }, cache: 'no-store' });
-                    // Try sensitivities canonical path first, then fallback to the typo version if needed
-                    let sensResp: any = null;
-                    try {
-                        sensResp = await safeFetch(`${API_BASE}/sensitivities/`, { headers: { ...authHeaders }, cache: 'no-store' });
-                    } catch {
-                        sensResp = await safeFetch(`${API_BASE}/sensivity`, { headers: { ...authHeaders }, cache: 'no-store' });
-                    }
-
+                    const sensResp = await safeFetch(`${API_BASE}/sensitivities/`, { headers: { ...authHeaders }, cache: 'no-store' });
+                    
                     const diets = normalizeOptions(dietsResp);
                     const sens = normalizeOptions(sensResp);
+
+                    // 2/a) Saját kiválasztások lekérése és név->ID illesztés (előválasztás)
+                    let prefIds: string[] = [];
+                    let sensIds: string[] = [];
+                    try {
+                        const uprefs = await safeFetch(`${API_BASE}/auth/me/preferences`, { headers: { ...authHeaders }, cache: 'no-store' });
+                        const usens  = await safeFetch(`${API_BASE}/auth/me/sensitivities`, { headers: { ...authHeaders }, cache: 'no-store' });
+                        const nameToId = (arr: OptionItem[], name: string) => {
+                            const m = arr.find(o => String(o.label).toLowerCase() === String(name).toLowerCase() || String(o.id) === String(name));
+                            return m ? String(m.id) : String(name);
+                        };
+                        prefIds = Array.isArray(uprefs) ? uprefs.map((n: any) => nameToId(diets, String(n))) : [];
+                        sensIds = Array.isArray(usens)  ? usens.map((n: any) => nameToId(sens,  String(n))) : [];
+                    } catch {}
 
                     if (!cancelled) {
                         setDietOptions(diets.length ? diets : [{ id: 'none', label: 'none' }]);
                         setSensitivityOptions(sens);
+                        setPrefs({ diets: prefIds, sensitivities: sensIds });
                     }
                 } catch (e) {
                     if (!cancelled) {
@@ -140,17 +151,6 @@ export default function ProfileDataPage() {
                     }
                 }
 
-                // 3) Load user selections (multi-select arrays)
-                // Try to load user selections if your API provides them; otherwise start empty arrays
-                try {
-                    const uprefs = await safeFetch(`${API_BASE}/users/${me?.id ?? me?.user_id}/preferences/`, { headers: { ...authHeaders }, cache: 'no-store' });
-                    const usens = await safeFetch(`${API_BASE}/users/${me?.id ?? me?.user_id}/sensitivities/`, { headers: { ...authHeaders }, cache: 'no-store' });
-                    const prefIds = Array.isArray(uprefs) ? uprefs.map((x: any) => x?.id ?? x).filter(Boolean) : [];
-                    const sensIds = Array.isArray(usens) ? usens.map((x: any) => x?.id ?? x).filter(Boolean) : [];
-                    if (!cancelled) setPrefs({ diets: prefIds, sensitivities: sensIds });
-                } catch {
-                    if (!cancelled) setPrefs({ diets: [], sensitivities: [] });
-                }
             } catch (e: any) {
                 if (!cancelled) setErr(e?.message || 'Failed to load user data');
             } finally {
@@ -162,24 +162,47 @@ export default function ProfileDataPage() {
         };
     }, [API_BASE]);
 
-    // ---- Handlers ----
+    // Profil mentése (név/telefon + email) – jelszó kötelező
     const saveProfile = async () => {
         setSavingProfile(true);
         setMsg(null);
         setErr(null);
         try {
             if (!currentPasswordForProfile) throw new Error('Current password is required to update personal data.');
-            await safeFetch(`${API_BASE}/user/update`, {
+            // Név/telefon frissítése
+            await safeFetch(`${API_BASE}/auth/me`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', ...authHeaders },
                 body: JSON.stringify({
-                    email: profile.email,
+                    current_password: currentPasswordForProfile,
                     full_name: profile.full_name,
                     phone: profile.phone,
-                    current_password: currentPasswordForProfile, // server must verify
                 }),
             });
-            setMsg('Profile updated successfully.');
+            // Email frissítése (ha változott)
+            if (profile.email && profile.email !== baselineEmail) {
+                await safeFetch(`${API_BASE}/auth/email-change`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...authHeaders },
+                    body: JSON.stringify({
+                        current_password: currentPasswordForProfile,
+                        new_email: profile.email,
+                    }),
+                });
+                setBaselineEmail(profile.email);
+            }
+            // Friss lekérés a /auth/me-ről, hogy a UI naprakész legyen
+            try {
+                const me = await safeFetch(`${API_BASE}/auth/me`, { headers: { ...authHeaders }, cache: 'no-store' });
+                setProfile({
+                    username: me?.username ?? me?.user_name ?? me?.name ?? '',
+                    email: me?.email ?? '',
+                    full_name: me?.full_name ?? me?.fullName ?? me?.name_full ?? '',
+                    phone: me?.phone ?? me?.phone_number ?? me?.phoneNumber ?? me?.tel ?? me?.telephone ?? '',
+                });
+                setBaselineEmail(me?.email ?? '');
+            } catch {}
+            setMsg('Profile saved successfully.');
             setCurrentPasswordForProfile('');
         } catch (e: any) {
             setErr(e?.message || 'Failed to update profile');
@@ -188,6 +211,7 @@ export default function ProfileDataPage() {
         }
     };
 
+    // Jelszó megváltoztatása (min. 8 karakter, egyező megerősítés)
     const changePassword = async () => {
         setSavingPassword(true);
         setMsg(null);
@@ -196,7 +220,7 @@ export default function ProfileDataPage() {
             if (!currentPassword) throw new Error('Current password is required.');
             if (newPassword.length < 8) throw new Error('New password must be at least 8 characters.');
             if (newPassword !== confirmPassword) throw new Error('New passwords do not match.');
-            await safeFetch(`${API_BASE}/user/change-password`, {
+            await safeFetch(`${API_BASE}/auth/change-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', ...authHeaders },
                 body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
@@ -212,7 +236,7 @@ export default function ProfileDataPage() {
         }
     };
 
-    // Multi-select toggle handlers using per-item endpoints (POST to add, DELETE to remove)
+    // Preferencia be/ki kapcsolása (POST/DELETE)
     const activateDiet = async (option: OptionItem) => {
         if (!userId) return setErr('Missing user id to update preference.');
         const isActive = prefs.diets.map(String).includes(String(option.id));
@@ -237,18 +261,14 @@ export default function ProfileDataPage() {
         }
     };
 
+    // Érzékenység be/ki kapcsolása (POST/DELETE)
     const activateSensitivity = async (option: OptionItem) => {
         if (!userId) return setErr('Missing user id to update sensitivity.');
         const isActive = prefs.sensitivities.map(String).includes(String(option.id));
         try {
             setErr(null); setMsg(null);
-            const canonical = `${API_BASE}/users/${userId}/sensitivities/${option.id}`;
-            const fallback = `${API_BASE}/users/${userId}/sensivity/${option.id}`;
-            try {
-                await safeFetch(canonical, { method: isActive ? 'DELETE' : 'POST', headers: { ...authHeaders } });
-            } catch {
-                await safeFetch(fallback, { method: isActive ? 'DELETE' : 'POST', headers: { ...authHeaders } });
-            }
+            await safeFetch(`${API_BASE}/users/${userId}/sensitivities/${option.id}`, { method: isActive ? 'DELETE' : 'POST', headers: { ...authHeaders } });
+
             setPrefs((p) => {
                 const idStr = String(option.id);
                 const next = p.sensitivities.map(String);
@@ -263,6 +283,7 @@ export default function ProfileDataPage() {
         }
     };
 
+    // UI render: profil, jelszó, és többválasztós kapcsolók
     return (
         <main className="max-w-3xl mx-auto p-6 space-y-6">
             <header className="space-y-1 anim-fade-in">
