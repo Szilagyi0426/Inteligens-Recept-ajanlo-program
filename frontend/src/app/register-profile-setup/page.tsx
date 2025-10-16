@@ -1,17 +1,43 @@
-export const metadata = {
-    title: 'ProfileData', // Oldal címe
-};
+import { ReactNode, useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
-export default function ProfileDataPage() {
-    return ( // HTML tartalom
-        <main className="max-w-2xl mx-auto p-6 space-y-4">
-            <h1 className="text-2xl font-semibold">Setting up user prefrences</h1>
-            <p className="opacity-80">
-            </p>
-            {/* TODO: fetch and display user profile data using the stored token or cookie */}
-            <div className="rounded border p-4">
-                <p className="text-sm">This is a placeholder for your profile details.</p>
-            </div>
-        </main>
+export default function QueryProvider({ children }: { children: ReactNode }) {
+    const [authed, setAuthed] = useState(false);
+    const [checked, setChecked] = useState(false);
+    const pathname = usePathname();
+    const router = useRouter();
+
+    useEffect(() => {
+        const check = () => {
+            try {
+                const has = typeof window !== 'undefined' && !!localStorage.getItem('token');
+                setAuthed(has);
+            } catch {
+                setAuthed(false);
+            } finally {
+                setChecked(true);
+            }
+        };
+        check();
+        window.addEventListener('storage', check);
+        return () => window.removeEventListener('storage', check);
+    }, []);
+
+    useEffect(() => {
+        if (!checked) return; // avoid redirect before we know auth state
+        const allowlist = new Set<string>(['/', '/register-profile-setup']);
+        if (!authed && pathname && !allowlist.has(pathname)) {
+            router.replace('/');
+        }
+    }, [checked, authed, pathname, router]);
+
+    const hideOnRoutes = new Set<string>(['/', '/register-profile-setup']);
+    const showNavbar = checked && authed && !hideOnRoutes.has(pathname || '');
+
+    return (
+        <>
+            {showNavbar && <nav>Navbar content here</nav>}
+            {children}
+        </>
     );
 }

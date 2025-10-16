@@ -13,6 +13,10 @@ from app.models.sensitivity import FoodSensitivity, UserSensitivity
 from app.schemas.user import UserUpdateWithPassword
 
 router = APIRouter()
+# TODO: Jelszó módosítás, felhasználó adatok módosítása, felhasználó személyes nevének
+# TODO: telefonszámának hozzáadása az adatbázishoz
+# TODO: Jelszó változtatás, email cím változtatás (megerősítéssel)
+
 
 # Az adott felhasználó étkezési preferenciáinak és érzékenységeinek kezelése
 
@@ -79,6 +83,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def read_me(current_user: User = Depends(get_current_user)):
     return current_user
 
+<<<<<<< HEAD
 @auth_router.put("/me", response_model=UserOut)
 def update_me(
     payload: UserUpdateWithPassword,
@@ -99,3 +104,37 @@ def update_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+=======
+# Felhasználó összes preferenciájának lekérdezése
+@router.get("/{user_id}/preferences/", response_model=list[str])
+def get_user_preferences(user_id: int, db: Session = Depends(get_db)):
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Lekérjük a userhez tartozó preferenciákat joinnal
+    prefs = (
+        db.query(MealPreference.name)
+        .join(UserMealPreference, MealPreference.id == UserMealPreference.preference_id)
+        .filter(UserMealPreference.user_id == user_id)
+        .all()
+    )
+    # A lekérdezés tuple-öket ad vissza [(‘vegan’,), (‘vegetarian’,)], ezért flatteneljük
+    return [p[0] for p in prefs]
+
+
+# Felhasználó összes érzékenységének lekérdezése
+@router.get("/{user_id}/sensitivities/", response_model=list[str])
+def get_user_sensitivities(user_id: int, db: Session = Depends(get_db)):
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    sens = (
+        db.query(FoodSensitivity.name)
+        .join(UserSensitivity, FoodSensitivity.id == UserSensitivity.sensitivity_id)
+        .filter(UserSensitivity.user_id == user_id)
+        .all()
+    )
+    return [s[0] for s in sens]
+>>>>>>> main

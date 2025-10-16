@@ -138,7 +138,7 @@ export default function Navbar() { // Navigációs sáv a tetején
                   >
                     <button
                       type="button"
-                      onClick={() => { setMenuOpen(false); router.push('/profile-data'); }}
+                      onClick={() => { setMenuOpen(false); router.push('/profile-page'); }}
                       className="flex w-full items-center gap-2 px-3 py-2 text-m text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition"
                       role="menuitem"
                     >
