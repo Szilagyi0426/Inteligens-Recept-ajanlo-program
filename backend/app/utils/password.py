@@ -11,7 +11,7 @@ _SALT_BYTES = 16
 
 def _split(encoded: str) -> Tuple[bytes, bytes, int]: # Felbontja a kódolt jelszó hash-t sóra, digestre és iterációkra
     try:
-        salt_b64, digest_b64, iter_str = encoded.split("$") # formátum: salt$digest$iterations
+        salt_b64, digest_b64, iter_str = encoded.split("$") 
         return base64.b64decode(salt_b64), base64.b64decode(digest_b64), int(iter_str) # dekódolja a bázis64-et és konvertálja az iterációkat int-re
     except Exception as e:
         raise ValueError("Invalid password hash format") from e # Hibát dob, ha a formátum érvénytelen
@@ -25,5 +25,5 @@ def hash_password(password: str) -> str:
 
 def verify_password(password: str, encoded: str) -> bool: # Ellenőrzi a jelszót a kódolt hash-sel
     salt, correct_digest, iters = _split(encoded) # Felbontja a kódolt hash-t
-    test_digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iters) # Újra generálja a digestet a megadott jelszóval és sóval
+    test_digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iters) 
     return hmac.compare_digest(test_digest, correct_digest) # Biztonságos összehasonlítás a helyes digest-tel

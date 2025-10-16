@@ -14,6 +14,14 @@ const baseConfig: NextConfig = { // Alap Next.js konfiguráció
   experimental: { // Kísérleti funkciók engedélyezése
     typedRoutes: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img.spoonacular.com',
+      },
+    ],
+  },
 };
 
 export default withPWAPlugin(baseConfig);
