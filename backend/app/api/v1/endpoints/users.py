@@ -10,6 +10,7 @@ from app.models.user import User
 from app.utils.password import hash_password, verify_password
 from app.models.preference import MealPreference, UserMealPreference
 from app.models.sensitivity import FoodSensitivity, UserSensitivity
+from app.schemas.user import UserUpdateWithPassword
 
 router = APIRouter()
 # TODO: Jelszó módosítás, felhasználó adatok módosítása, felhasználó személyes nevének
@@ -133,26 +134,26 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def read_me(current_user: User = Depends(get_current_user)):
     return current_user
 
-@auth_router.get("/me/preferences", response_model=list[str])
-def get_my_preferences(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    prefs = (
-        db.query(MealPreference.name)
-        .join(UserMealPreference, MealPreference.id == UserMealPreference.preference_id)
-        .filter(UserMealPreference.user_id == current_user.id)
-        .all()
-    )
-    return [p[0] for p in prefs]
+@auth_router.put("/me", response_model=UserOut)
+def update_me(
+    payload: UserUpdateWithPassword,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Jelszó ellenőrzése
+    if not verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(status_code=403, detail="Hibás jelszó")
 
-@auth_router.get("/me/sensitivities", response_model=list[str])
-def get_my_sensitivities(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    sens = (
-        db.query(FoodSensitivity.name)
-        .join(UserSensitivity, FoodSensitivity.id == UserSensitivity.sensitivity_id)
-        .filter(UserSensitivity.user_id == current_user.id)
-        .all()
-    )
-    return [s[0] for s in sens]
+    # Adatok frissítése
+    if payload.username:
+        current_user.username = payload.username
+    if payload.email:
+        current_user.email = payload.email
 
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
 # Felhasználó összes preferenciájának lekérdezése
 @router.get("/{user_id}/preferences/", response_model=list[str])
 def get_user_preferences(user_id: int, db: Session = Depends(get_db)):
