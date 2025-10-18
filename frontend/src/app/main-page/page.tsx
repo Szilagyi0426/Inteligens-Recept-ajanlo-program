@@ -135,11 +135,11 @@ export default async function MainPage() {
                     \${typeof r.servings === 'number' ? \`<span>🍽️ \${r.servings} adag</span>\` : ''}
                   </div>
                   <section class="mt-5">
-                    <h3 class="font-medium">Hozzávalók</h3>
+                    <h3 class="font-medium">Ingredients</h3>
                     <ul class="list-disc pl-5 mt-2 space-y-1 text-sm">\${ings}</ul>
                   </section>
                   <section class="mt-5">
-                    <h3 class="font-medium">Elkészítés</h3>
+                    <h3 class="font-medium">Step- by step guide</h3>
                     \${instructionsBlock}
                   </section>
                 </div>

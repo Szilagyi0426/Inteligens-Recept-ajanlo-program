@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000/api/v1';
 
+const cleanMessage = (s?: string | null) => (s ?? '').replace(/^"|"$/g, '').trim();
 type OptionItem = { id: string | number; label: string };
 
 export default function ProfileDataPage() {
@@ -11,9 +13,7 @@ export default function ProfileDataPage() {
     const [loading, setLoading] = useState(true);
     const [savingProfile, setSavingProfile] = useState(false);
     const [savingPassword, setSavingPassword] = useState(false);
-    const [msg, setMsg] = useState<string | null>(null);
-    const [err, setErr] = useState<string | null>(null);
-
+    
     // Auth token kiolvasása (localStorage)
     const token = useMemo(() => {
         try {
@@ -97,8 +97,6 @@ export default function ProfileDataPage() {
         let cancelled = false;
         (async () => {
             setLoading(true);
-            setMsg(null);
-            setErr(null);
             try {
                 // Saját profil lekérése
                 const me = await safeFetch(`${API_BASE}/auth/me`, {
@@ -152,7 +150,7 @@ export default function ProfileDataPage() {
                 }
 
             } catch (e: any) {
-                if (!cancelled) setErr(e?.message || 'Failed to load user data');
+                if (!cancelled) toast.error(cleanMessage(e?.message) || 'Failed to load user data');
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -165,8 +163,6 @@ export default function ProfileDataPage() {
     // Profil mentése (név/telefon + email) – jelszó kötelező
     const saveProfile = async () => {
         setSavingProfile(true);
-        setMsg(null);
-        setErr(null);
         try {
             if (!currentPasswordForProfile) throw new Error('Current password is required to update personal data.');
             // Név/telefon frissítése
@@ -202,10 +198,10 @@ export default function ProfileDataPage() {
                 });
                 setBaselineEmail(me?.email ?? '');
             } catch {}
-            setMsg('Profile saved successfully.');
+            toast.success('Profile saved successfully.');
             setCurrentPasswordForProfile('');
         } catch (e: any) {
-            setErr(e?.message || 'Failed to update profile');
+            toast.error(cleanMessage(e?.message) || 'Failed to update profile');
         } finally {
             setSavingProfile(false);
         }
@@ -214,8 +210,6 @@ export default function ProfileDataPage() {
     // Jelszó megváltoztatása (min. 8 karakter, egyező megerősítés)
     const changePassword = async () => {
         setSavingPassword(true);
-        setMsg(null);
-        setErr(null);
         try {
             if (!currentPassword) throw new Error('Current password is required.');
             if (newPassword.length < 8) throw new Error('New password must be at least 8 characters.');
@@ -225,12 +219,12 @@ export default function ProfileDataPage() {
                 headers: { 'Content-Type': 'application/json', ...authHeaders },
                 body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
             });
-            setMsg('Password changed successfully.');
+            toast.success('Password changed successfully.');
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
         } catch (e: any) {
-            setErr(e?.message || 'Failed to change password');
+            toast.error(cleanMessage(e?.message) || 'Failed to change password');
         } finally {
             setSavingPassword(false);
         }
@@ -238,10 +232,9 @@ export default function ProfileDataPage() {
 
     // Preferencia be/ki kapcsolása (POST/DELETE)
     const activateDiet = async (option: OptionItem) => {
-        if (!userId) return setErr('Missing user id to update preference.');
+        if (!userId) return toast.error('Missing user id to update preference.');
         const isActive = prefs.diets.map(String).includes(String(option.id));
         try {
-            setErr(null); setMsg(null);
             const url = `${API_BASE}/users/${userId}/preferences/${option.id}`;
             await safeFetch(url, {
                 method: isActive ? 'DELETE' : 'POST',
@@ -255,18 +248,17 @@ export default function ProfileDataPage() {
                     diets: isActive ? next.filter((id) => id !== idStr) : [...new Set([...next, idStr])],
                 };
             });
-            setMsg(isActive ? `Removed preference: ${option.label}` : `Added preference: ${option.label}`);
+            toast.success(isActive ? `Removed preference: ${option.label}` : `Added preference: ${option.label}`);
         } catch (e: any) {
-            setErr(e?.message || 'Failed to update preference');
+            toast.error(cleanMessage(e?.message) || 'Failed to update preference');
         }
     };
 
     // Érzékenység be/ki kapcsolása (POST/DELETE)
     const activateSensitivity = async (option: OptionItem) => {
-        if (!userId) return setErr('Missing user id to update sensitivity.');
+        if (!userId) return toast.error('Missing user id to update sensitivity.');
         const isActive = prefs.sensitivities.map(String).includes(String(option.id));
         try {
-            setErr(null); setMsg(null);
             await safeFetch(`${API_BASE}/users/${userId}/sensitivities/${option.id}`, { method: isActive ? 'DELETE' : 'POST', headers: { ...authHeaders } });
 
             setPrefs((p) => {
@@ -277,9 +269,9 @@ export default function ProfileDataPage() {
                     sensitivities: isActive ? next.filter((id) => id !== idStr) : [...new Set([...next, idStr])],
                 };
             });
-            setMsg(isActive ? `Removed sensitivity: ${option.label}` : `Added sensitivity: ${option.label}`);
+            toast.success(isActive ? `Removed sensitivity: ${option.label}` : `Added sensitivity: ${option.label}`);
         } catch (e: any) {
-            setErr(e?.message || 'Failed to update sensitivity');
+            toast.error(cleanMessage(e?.message) || 'Failed to update sensitivity');
         }
     };
 
@@ -291,16 +283,7 @@ export default function ProfileDataPage() {
                 <p className="text-sm text-neutral-600 dark:text-neutral-300">Manage your profile, password and dietary preferences.</p>
             </header>
 
-            {msg && (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-900/30 dark:text-emerald-100 anim-fade-up">
-                    {msg}
-                </div>
-            )}
-            {err && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-800 dark:border-red-900/40 dark:bg-red-900/30 dark:text-red-100 anim-fade-up">
-                    {err}
-                </div>
-            )}
+
 
             {/* PROFILE */}
             <section className="rounded-2xl border border-neutral-200/60 dark:border-neutral-800/60 bg-white/70 dark:bg-neutral-900/60 backdrop-blur shadow anim-pop">

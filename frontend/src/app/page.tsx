@@ -2,11 +2,11 @@
 import { useState } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import RegisterForm from '@/components/auth/RegisterForm';
+import toast from 'react-hot-toast';
 
 
 export default function AuthPage() { // Authentikációs oldal | Bejelentkezés és regisztráció
     const [mode, setMode] = useState<'login' | 'register'>('login'); // Állapot a bejelentkezési és regisztrációs mód között
-    const [msg, setMsg] = useState<string | null>(null); // Állapot az üzenetekhez (sikeres vagy hibás műveletek)
 
     return (
         <main className="min-h-dvh flex flex-col items-center justify-center bg-gradient-to-b from-emerald-50 to-white dark:from-neutral-900 dark:to-neutral-950 anim-fade-in">
@@ -45,18 +45,22 @@ export default function AuthPage() { // Authentikációs oldal | Bejelentkezés 
                             </button>
                         </div>
 
-                        {msg && (
-                            <div className="mx-4 mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-200">
-                                {msg}
-                            </div>
-                        )}
-
                         <div className="p-4">
                             {mode === 'login' ? (
-                                <LoginForm onSuccess={setMsg} onError={setMsg} />
-                            ) : (
-                                <RegisterForm onSuccess={setMsg} onError={setMsg} />
-                            )}
+                                <LoginForm
+                                  onSuccess={(message?: string) => toast.success(message || 'Sikeres bejelentkezés!')}
+                                  onError={(message?: string) =>
+                                    toast.error(message?.replace(/^"|"$/g, '') || 'Hiba történt a bejelentkezés során')
+                                  }
+                                />
+                              ) : (
+                                <RegisterForm
+                                  onSuccess={(message?: string) => toast.success(message || 'Sikeres regisztráció!')}
+                                  onError={(message?: string) =>
+                                    toast.error(message?.replace(/^"|"$/g, '') || 'Hiba történt a regisztráció során')
+                                  }
+                                />
+                              )}
                         </div>
                     </div>
                 </div>

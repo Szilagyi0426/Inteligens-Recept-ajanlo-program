@@ -113,8 +113,8 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         username=payload.username,
         email=payload.email,
         password_hash=hash_password(payload.password),
-        full_name=payload.full_name,
-        phone=payload.phone,
+        full_name="",
+        phone="",
     )
     db.add(user)
     db.commit()

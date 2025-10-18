@@ -1,6 +1,8 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import QueryProvider from '@/lib/query/QueryProvider';
+import ToastProvider from '@/components/layout/ToastProvider';
+
 
 export const metadata: Metadata = {
     title: 'Recept Ajánló', // Oldal címe
@@ -9,10 +11,11 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-    return ( // HTML tartalom
+    return (
         <html lang="hu">
         <body>
         <QueryProvider>{children}</QueryProvider>
+        <ToastProvider /> {/* <-- Globális toast minden oldalhoz */}
         </body>
         </html>
     );
