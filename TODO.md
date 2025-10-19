@@ -7,20 +7,27 @@
   - [x] Regisztrációhoz, bejelentkezéshez tartozó API végpontok
   - [x] Személyes adatok lekérdezése API végpontok
   - [x] Érzékenységek hozzáadása és eltávolítása API végpontok
+  - [ ] recept kedvencekhez adás, és kiválasztott receptek API végpontok
 
 - Frontend
   - [x] Frontend alap legenerálása
   - [x] Regisztrációs / Bejelentkezési felület legenerálása
   - [x] Profile oldal elkészítése
-  - [ ] Recipes oldal elkészítése
   - [ ] Main oldal elkészítése
+  - [ ] Elefelejtett jelszó 
+
 ## Balázs
 - Backend
   - [ ] 
 - Frontend
-  - [ ]
+  - [ ] Recipes oldal elészítése, egyenlőre nem preferencia szűrt receptek
+    - [ ] kedvenezkhez adás gomb ( * )
+    - [ ] recept kiváalsztása gomb ( + )
+    - [ ] register-profile-setup oldal teljesnév + telefonszám bekérése
+
 ## Lóránt
 - Backend
+  - [ ] recipeID alapján lekérés, minden hozzátartozó információval
   - [ ] 
 - Frontend
   - [ ]
