@@ -13,17 +13,18 @@
   - [x] Frontend alap legenerálása
   - [x] Regisztrációs / Bejelentkezési felület legenerálása
   - [x] Profile oldal elkészítése
-  - [ ] Main oldal elkészítése
-  - [ ] Elefelejtett jelszó 
+  - [x] Main oldal elkészítése
+  - [x] Elefelejtett jelszó 
+  - [x] Recipes oldal elészítése, egyenlőre nem preferencia szűrt receptek
+    - [ ] kedvenezkhez adás gomb ( * )
+    - [ ] recept kiváalsztása gomb ( + )
+    - [x] register-profile-setup oldal teljesnév + telefonszám bekérése
 
 ## Balázs
 - Backend
   - [ ] 
 - Frontend
-  - [ ] Recipes oldal elészítése, egyenlőre nem preferencia szűrt receptek
-    - [ ] kedvenezkhez adás gomb ( * )
-    - [ ] recept kiváalsztása gomb ( + )
-    - [ ] register-profile-setup oldal teljesnév + telefonszám bekérése
+  
 
 ## Lóránt
 - Backend

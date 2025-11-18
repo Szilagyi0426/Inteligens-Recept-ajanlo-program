@@ -23,6 +23,20 @@ if config.config_file_name is not None:
 # target_metadata a modellekből
 from app.models import target_metadata
 
+def include_object(object, name, type_, reflected, compare_to):
+    legacy_tables = {"search_history", "user_meal_preference", "user_sensitivity"}
+    if type_ == "table" and name in legacy_tables:
+        return False
+    legacy_indexes = {
+        "ix_search_history_user_time",
+        "ix_search_history_user_id",
+        "ix_user_meal_preference_pref",
+        "ix_user_sensitivity_sens",
+    }
+    if type_ == "index" and name in legacy_indexes:
+        return False
+    return True
+
 def run_migrations_offline():
     context.configure(
         url=config.get_main_option("sqlalchemy.url"),
