@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { LuClipboardList } from 'react-icons/lu';
 import { LuChefHat } from 'react-icons/lu';
+import { LuShield } from 'react-icons/lu';
 
 function IconHome() {
   return (
@@ -22,6 +23,7 @@ function IconUserCircle() {
 export default function Navbar() { // Navigációs sáv a tetején
     const router = useRouter();
     const [username, setUsername] = useState<string | null>(null);
+    const [userRole, setUserRole] = useState<number>(0); // 0: user, 1: moderator, 2: admin
 
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -43,18 +45,24 @@ export default function Navbar() { // Navigációs sáv a tetején
       };
     }, []);
 
-    useEffect(() => { // Felhasználónév lekérése localStorage-ból (vagy /me végpontról)
+    useEffect(() => { // Felhasználónév és szerepkör lekérése
         const token = localStorage.getItem('token');
         const user = localStorage.getItem('username');
-        if (token && user) setUsername(user);
+        const role = localStorage.getItem('user_role');
+        if (token && user) {
+            setUsername(user);
+            setUserRole(role ? parseInt(role) : 0);
+        }
     }, []);
 
     function logout() { // Kijelentkezés
         try { // localStorage törlése
             localStorage.removeItem('token');
             localStorage.removeItem('username');
+            localStorage.removeItem('user_role');
         } catch {}
         setUsername(null);
+        setUserRole(0);
         
         try { // Esemény küldése a localStorage változásáról (más ablakoknak)
             window.dispatchEvent(new StorageEvent('storage', { key: 'token' }));
@@ -108,6 +116,18 @@ export default function Navbar() { // Navigációs sáv a tetején
                     <LuClipboardList  />
                     <span className="hidden sm:inline">Shopping List</span>
                 </button>
+
+              {/* Moderator button - only visible for moderators and admins */}
+              {(userRole === 1 || userRole === 2) && (
+                <button
+                  type="button"
+                  onClick={() => router.push('/moderator-dashboard')}
+                  className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-m text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition active:scale-[.98]"
+                >
+                  <LuShield />
+                  <span className="hidden sm:inline">Moderator</span>
+                </button>
+              )}
 
               {/* User avatar at the far right with dropdown */}
               <div ref={menuRef} className="relative">

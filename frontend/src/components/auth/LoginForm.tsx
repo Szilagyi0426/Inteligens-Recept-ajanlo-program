@@ -55,14 +55,36 @@ export default function LoginForm({
         try {
             const result = await loginApi(data);
             const token = (result as any)?.access_token || '';
-            // Sikeres bejelentkezés esetén tároljuk a tokent és a felhasználónevet
+            
+            // Lekérjük a felhasználó adatait a /me végpontról
             try {
+                const userResponse = await fetch('http://127.0.0.1:8000/api/v1/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+                
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    // Tároljuk a tokent, felhasználónevet és szerepkört
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('username', userData.username);
+                    localStorage.setItem('user_role', userData.role_id.toString());
+                    window.dispatchEvent(new StorageEvent('storage', { key: 'token' }));
+                } else {
+                    // Ha nem sikerül lekérni a user adatokat, csak a tokent tároljuk
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('user_role', '0'); // Alapértelmezett user szerepkör
+                    window.dispatchEvent(new StorageEvent('storage', { key: 'token' }));
+                }
+            } catch (e) {
+                console.error('Failed to fetch user data:', e);
+                // Ha hiba történik, alapértelmezett értékekkel dolgozunk
                 localStorage.setItem('token', token);
                 localStorage.setItem('username', data.username);
+                localStorage.setItem('user_role', '0');
                 window.dispatchEvent(new StorageEvent('storage', { key: 'token' }));
-            } catch (e) {
-                console.error('Failed to store login data:', e);
             }
+            
             onSuccess?.('Successful login');
             // Átirányítás a főoldalra
             router.push('/main-page');

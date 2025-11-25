@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from .endpoints import users, prefs, sens, history
+from .endpoints import users, prefs, sens, history, moderator
 from .endpoints.users import auth_router as auth
 from .endpoints.reset import reset_router
 
@@ -13,3 +13,6 @@ api_router.include_router(history.router, prefix="/search-history", tags=["searc
 # auth
 api_router.include_router(auth, prefix="/auth", tags=["auth"]) # Hitelesítéshez kapcsolódó végpontok
 api_router.include_router(reset_router, prefix="/auth", tags=["auth"]) # Elfelejtett jelszó végpont
+
+# moderator
+api_router.include_router(moderator.router, prefix="/moderator", tags=["moderator"]) # Moderátori funkciók

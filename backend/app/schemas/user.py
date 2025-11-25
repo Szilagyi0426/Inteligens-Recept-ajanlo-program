@@ -6,12 +6,17 @@ class UserCreate(BaseModel): # Schema a felhasználó létrehozásához
     email: EmailStr
     password: str
 
+from datetime import datetime
+
 class UserOut(BaseModel): # Schema a felhasználó kimenetéhez
     id: int
     username: str
     email: EmailStr
-    full_name: str
-    phone: str
+    full_name: str | None = None
+    phone: str | None = None
+    role_id: int = 0
+    created_at: datetime
+    updated_at: datetime
     class Config: from_attributes = True
 
 

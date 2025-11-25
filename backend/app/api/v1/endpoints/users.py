@@ -154,6 +154,19 @@ def update_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+# Felhasználó alapadatainak lekérdezése (moderátorok számára)
+@router.get("/{user_id}", response_model=UserOut)
+def get_user_by_id(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # Csak moderátorok és adminok, vagy saját maga férhet hozzá
+    if current_user.role_id < 1 and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Nincs jogosultságod ehhez a művelethez")
+    
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return user
+
 # Felhasználó összes preferenciájának lekérdezése
 @router.get("/{user_id}/preferences/", response_model=list[str])
 def get_user_preferences(user_id: int, db: Session = Depends(get_db)):
@@ -168,7 +181,7 @@ def get_user_preferences(user_id: int, db: Session = Depends(get_db)):
         .filter(UserMealPreference.user_id == user_id)
         .all()
     )
-    # A lekérdezés tuple-öket ad vissza [(‘vegan’,), (‘vegetarian’,)], ezért flatteneljük
+    # A lekérdezés tuple-öket ad vissza [('vegan',), ('vegetarian',)], ezért flatteneljük
     return [p[0] for p in prefs]
 
 
