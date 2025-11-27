@@ -11,8 +11,10 @@ const withPWAPlugin = withPWA({
 
 const baseConfig: NextConfig = { // Alap Next.js konfiguráció
   reactStrictMode: true, // React szigorú mód engedélyezése
-  experimental: { // Kísérleti funkciók engedélyezése
-    typedRoutes: true,
+  typedRoutes: true,
+  // Turbopack root beállítása a frontend mappára a workspace root warning eltávolításához
+  turbopack: {
+    root: __dirname,
   },
   images: {
     remotePatterns: [

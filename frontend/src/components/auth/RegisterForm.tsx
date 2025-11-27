@@ -102,26 +102,26 @@ export default function RegisterForm({
                 <div className="space-y-1 anim-slide-in-right">
                     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Email address</label>
                     <div className="relative">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
-            <IconMail />
-          </span>
-                        <input
-                            type="email"
-                            className="w-full rounded-xl border border-neutral-300 bg-white/80 pl-10 pr-3 py-2 text-sm shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:border-neutral-700 dark:bg-neutral-900/60"
-                            placeholder="you@example.com"
-                            autoComplete="email"
-                            {...register('email')}
-                        />
+                     <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                         <IconMail />
+                             </span>
+                                <input
+                                    type="email"
+                                    className="w-full rounded-xl border border-neutral-300 bg-white/80 pl-10 pr-3 py-2 text-sm shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:border-neutral-700 dark:bg-neutral-900/60"
+                                    placeholder="you@example.com"
+                                    autoComplete="email"
+                                    {...register('email')}
+                            />
                     </div>
                     {errors.email && <p className="text-red-600 text-xs mt-1">{errors.email.message}</p>}
-                </div>
-
-                <div className="space-y-1 anim-slide-in-left">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Password</label>
-                    <div className="relative">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
-            <IconLock />
-          </span>
+                    </div>
+    
+                    <div className="space-y-1 anim-slide-in-left">
+                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Password</label>
+                        <div className="relative">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                <IconLock />
+              </span>
                         <input
                             type={showPw ? 'text' : 'password'}
                             className="w-full rounded-xl border border-neutral-300 bg-white/80 pl-10 pr-10 py-2 text-sm shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:border-neutral-700 dark:bg-neutral-900/60"
@@ -145,15 +145,15 @@ export default function RegisterForm({
                     disabled={loading}
                     className="group relative w-full overflow-hidden rounded-xl bg-emerald-600 px-4 py-2 text-white shadow ring-emerald-400 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 btn-shimmer transition-transform active:scale-[.98]"
                 >
-        <span className="inline-flex items-center justify-center gap-2 text-sm">
-          {loading && (
-              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
-              </svg>
-          )}
-            {loading ? 'Registering…' : 'Register'}
-        </span>
+                    <span className="inline-flex items-center justify-center gap-2 text-sm">
+                      {loading && (
+                          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
+                          </svg>
+                      )}
+                        {loading ? 'Registering…' : 'Register'}
+                    </span>
                 </button>
             </div>
         </form>

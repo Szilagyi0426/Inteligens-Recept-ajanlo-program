@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from .endpoints import users, prefs, sens, history, moderator
+from .endpoints import users, prefs, sens, history, moderator, recipe, shoppingList
 from .endpoints.users import auth_router as auth
 from .endpoints.reset import reset_router
 
@@ -9,6 +9,10 @@ api_router.include_router(users.router, prefix="/users", tags=["users"]) # Felha
 api_router.include_router(prefs.router, prefix="/preferences", tags=["preferences"]) # Étkezési preferenciákhoz kapcsolódó végpontok
 api_router.include_router(sens.router, prefix="/sensitivities", tags=["sensitivities"]) # Ételérzékenységekhez kapcsolódó végpontok
 api_router.include_router(history.router, prefix="/search-history", tags=["search-history"]) # Keresési előzményekhez kapcsolódó végpontok
+api_router.include_router(recipe.router, prefix="/recipe", tags=["recipe"]) # Receptekhez kapcsolódó végpontok
+api_router.include_router(shoppingList.router, prefix="/shoppinglist", tags=["shoppingList"]) # Bevásárló listához tartozó végpontok
+
+
 
 # auth
 api_router.include_router(auth, prefix="/auth", tags=["auth"]) # Hitelesítéshez kapcsolódó végpontok

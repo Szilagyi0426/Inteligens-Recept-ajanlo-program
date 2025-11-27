@@ -41,18 +41,37 @@ export default function QueryProvider({ children }: { children: ReactNode }) {
         return () => window.removeEventListener('storage', check);
     }, []);
 
-    // ha nincs token és nem az engedélyezett route-on vagyunk -> redirect a loginra
     useEffect(() => {
-        if (!checked) return; // avoid redirect before we know auth state
-        const allowlist = new Set<string>(['/', '/register-profile-setup']);
-        if (!authed && pathname && !allowlist.has(pathname)) {
-            router.replace('/');
-        }
-    }, [checked, authed, pathname, router]);
+        if (!checked) return;
 
-    // Navbar csak auth mellett és nem a login oldalon
-    const hideOnRoutes = new Set<string>(['/', '/register-profile-setup']);
-    const showNavbar = checked && authed && !hideOnRoutes.has(pathname || '');
+        // ha bejelentkezett, de nincs beállítva a profilnév
+        if (authed) {
+            try {
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                const fullName = userData?.full_name;
+                console.log(fullName);
+
+                // ha üres vagy hiányzik → redirect, de csak ha nem pont ott van
+                const onSetupPage = pathname === '/register-profile-setup';
+                /*
+                if ((!fullName || fullName.trim() === '') && !onSetupPage) {
+                    router.replace('/register-profile-setup');
+                }
+
+                // ha van név, de mégis a setup oldalon van, visszadobjuk főoldalra
+                if (fullName && pathname === '/register-profile-setup') {
+                    router.replace('/');
+                }
+                
+                 */
+            } catch (e) {
+                console.error('Failed to parse user data from localStorage', e);
+            }
+        }
+    }, [authed, checked, pathname, router]);
+
+    // Navbar mindig megjelenik
+    const showNavbar = true;
 
     return (
         <QueryClientProvider client={client}>
