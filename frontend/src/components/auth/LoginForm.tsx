@@ -59,13 +59,24 @@ export default function LoginForm({
             try {
                 localStorage.setItem('token', token);
                 localStorage.setItem('username', data.username);
+                const user_id = (result as any)?.user_id;
+                if (user_id !== undefined && user_id !== null) {
+                    localStorage.setItem('user_id', String(user_id));
+                }
+                console.log("userID:" + user_id)
+
+                const roleId = (result as any)?.role_id;
+                if (roleId !== undefined && roleId !== null) {
+                    localStorage.setItem('role_id', String(roleId));
+                }
+                
                 window.dispatchEvent(new StorageEvent('storage', { key: 'token' }));
             } catch (e) {
                 console.error('Failed to store login data:', e);
             }
             onSuccess?.('Successful login');
             // Átirányítás a főoldalra
-            router.push('/main-page');
+            router.push('/');
         } catch (e: any) { // Hibakezelés
             onError?.(e?.message || 'Error during login');
         } finally {

@@ -1,263 +1,188 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-type OptionItem = {
-  id: string | number;
-  label: string;
-};
+import { preferencesLogic } from './components/preferencesLogic';
 
 export default function ProfilePreferences() {
-  const router = useRouter();
-  const [sensitivities, setSensitivities] = useState<OptionItem[]>([]);
-  const [preferences, setPreferences] = useState<OptionItem[]>([]);
-  const [selectedSensitivities, setSelectedSensitivities] = useState<Array<string | number>>([]);
-  const [selectedPreferences, setSelectedPreferences] = useState<Array<string | number>>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);		
-  const [message, setMessage] = useState('');
+    const {
+        loading,
+        saving,
+        message,
+        sensitivities,
+        preferences,
+        selectedSensitivities,
+        selectedPreferences,
+        toggleSelection,
+        handleSave,
+    } = preferencesLogic();
 
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, '') ?? 'http://127.0.0.1:8000/api/v1';
-
-  // Token és user_id
-  let token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  const storedUserId = typeof window !== 'undefined' ? localStorage.getItem('user_id') : null;
-
-  let authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-
-  // Biztonságos fetch
-  const safeFetch = async (url: string, init?: RequestInit) => {
-    const res = await fetch(url, {
-      ...init,
-      headers: { ...(init?.headers || {}), ...authHeaders },
-      credentials: 'include',
-    });
-    if (!res.ok) {
-      let text = '';
-      try {
-        const j = await res.json();
-        text = j?.detail ? JSON.stringify(j.detail) : JSON.stringify(j);
-      } catch {
-        text = await res.text();
-      }
-      throw new Error(text || `HTTP ${res.status}`);
+    if (loading) {
+        return (
+            <main className="max-w-3xl mx-auto p-6">
+                <p className="text-sm text-neutral-500">Loading preferences…</p>
+            </main>
+        );
     }
-    return res.json();
-  };
 
-  const normalizeOptions = (input: any): OptionItem[] => {
-    if (!input) return [];
-    if (Array.isArray(input) && typeof input[0] === 'string') {
-      return input.map(x => ({ id: x, label: x }));
-    }
-    const arr = Array.isArray(input) ? input : input.results ?? input.data ?? input.items ?? [];
-    return arr
-      .map((x: any) => {
-        if (!x) return null;
-        const id = x.id ?? x.value ?? x.key ?? x.slug ?? x.code ?? x.name;
-        const label = x.label ?? x.name ?? x.title ?? x.value ?? x.slug ?? x.code ?? x.id;
-        if (id == null || label == null) return null;
-        return { id, label: String(label) };
-      })
-      .filter(Boolean) as OptionItem[];
-  };
+    return (
+        <main className="max-w-3xl mx-auto p-6 space-y-6">
+            {/* header */}
+            <header className="space-y-1">
+                <h1 className="text-2xl font-semibold tracking-tight">Food profile</h1>
+                <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                    Select which foods to avoid (sensitivities) and what kind of meals you would like to avoid (preferences).
+                </p>
+            </header>
 
-  // Betöltés
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Ha nincs token, de van storedUserId, próbáljunk automatikus login-t
-        if (!token && storedUserId) {
-          try {
-            const loginResponse = await fetch(`${API_BASE}/auth/login/`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ user_id: storedUserId }), // Backendhez igazítani
-            }).then(res => res.json());
+            {/* personal information section */}
+            <section className="rounded-2xl border border-neutral-200/60 dark:border-neutral-800/60 bg-white/70 dark:bg-neutral-900/60 backdrop-blur shadow p-5 md:p-6 space-y-4">
+                <h2 className="text-lg font-medium">Personal information</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label
+                            htmlFor="firstName"
+                            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+                        >
+                            First name
+                        </label>
+                        <input
+                            type="text"
+                            id="firstName"
+                            placeholder="John"
+                            className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/60 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
+                        />
+                    </div>
+                    <div>
+                        <label
+                            htmlFor="lastName"
+                            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+                        >
+                            Last name
+                        </label>
+                        <input
+                            type="text"
+                            id="lastName"
+                            placeholder="Doe"
+                            className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/60 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
+                        />
+                    </div>
+                    <div className="md:col-span-2">
+                        <label
+                            htmlFor="phoneNumber"
+                            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+                        >
+                            Phone number
+                        </label>
+                        <input
+                            type="tel"
+                            id="phoneNumber"
+                            placeholder="+36 30 123 4567"
+                            className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/60 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
+                        />
+                    </div>
+                </div>
+            </section>
 
-            if (loginResponse.access_token) {
-              localStorage.setItem('token', loginResponse.access_token);
-              token = loginResponse.access_token;
-              authHeaders = { Authorization: `Bearer ${token}` };
-            } else {
-              console.warn('Automatic login failed: no access_token returned');
-            }
-          } catch (err) {
-            console.warn('Automatic login failed', err);
-          }
-        }
+            {/* sensitivities card */}
+            <section className="rounded-2xl border border-neutral-200/60 dark:border-neutral-800/60 bg-white/70 dark:bg-neutral-900/60 backdrop-blur shadow">
+                <div className="p-5 md:p-6 space-y-4">
+                    <div className="flex items-center justify-between gap-2">
+                        <div>
+                            <h2 className="text-lg font-medium">Food sensitivities</h2>
+                            <p className="text-sm text-neutral-500">
+                                Mark the sensitives tht you have, so we can recommend recipes based on it.
+                            </p>
+                        </div>
+                    </div>
 
-        // Opciók betöltése
-        let sensDataRaw;
-        try {
-          sensDataRaw = await safeFetch(`${API_BASE}/sensitivities/`);
-        } catch {
-          sensDataRaw = await safeFetch(`${API_BASE}/sensivity`);
-        }
-        const prefDataRaw = await safeFetch(`${API_BASE}/preferences/`);
-        setSensitivities(normalizeOptions(sensDataRaw));
-        setPreferences(normalizeOptions(prefDataRaw));
+                    {sensitivities.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                            {sensitivities.map((opt) => {
+                                const active = selectedSensitivities.includes(opt.id);
+                                return (
+                                    <button
+                                        key={opt.id}
+                                        type="button"
+                                        aria-pressed={active}
+                                        onClick={() => toggleSelection(opt.id, 'sensitivity')}
+                                        className={`px-3 py-1.5 rounded-full border text-sm transition inline-flex items-center gap-1.5 ${
+                                            active
+                                                ? 'border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-900/30 dark:text-emerald-50 shadow-sm'
+                                                : 'border-neutral-200 bg-white/40 text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900/30 dark:text-neutral-200'
+                                        }`}
+                                    >
+                                        {active && (
+                                            <span
+                                                aria-hidden
+                                                className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"
+                                            />
+                                        )}
+                                        {opt.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-neutral-400">No sensitivities found.</p>
+                    )}
+                </div>
+            </section>
 
-        // Felhasználó kiválasztásai
-        let userId: string | number | null = storedUserId;
-        if (!userId && token) {
-          const me = await safeFetch(`${API_BASE}/auth/me`);
-          userId = me?.id ?? me?.user_id;
-          if (userId) localStorage.setItem('user_id', String(userId));
-        }
+            {/* preferences card */}
+            <section className="rounded-2xl border border-neutral-200/60 dark:border-neutral-800/60 bg-white/70 dark:bg-neutral-900/60 backdrop-blur shadow">
+                <div className="p-5 md:p-6 space-y-4">
+                    <div className="flex items-center justify-between gap-2">
+                        <div>
+                            <h2 className="text-lg font-medium">Meal preferences</h2>
+                            <p className="text-sm text-neutral-500">
+                                Here you can select your preferred dietary.
+                            </p>
+                        </div>
+                    </div>
 
-        if (!userId) {
-          console.warn('No user info available, preferences cannot be loaded.');
-        } else {
-          try {
-            const userPrefs = await safeFetch(`${API_BASE}/users/${userId}/preferences/`);
-            const userSens = await safeFetch(`${API_BASE}/users/${userId}/sensitivities/`);
-            setSelectedPreferences(userPrefs ?? []);
-            setSelectedSensitivities(userSens ?? []);
-          } catch (err) {
-            console.warn('Could not load user-specific selections');
-          }
-        }
-      } catch (err: unknown) {
-        if (err instanceof Error) console.error('Error loading data:', err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+                    {preferences.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                            {preferences.map((opt) => {
+                                const active = selectedPreferences.includes(opt.id);
+                                return (
+                                    <button
+                                        key={opt.id}
+                                        type="button"
+                                        aria-pressed={active}
+                                        onClick={() => toggleSelection(opt.id, 'preference')}
+                                        className={`px-3 py-1.5 rounded-full border text-sm transition inline-flex items-center gap-1.5 ${
+                                            active
+                                                ? 'border-sky-400 bg-sky-50 text-sky-800 dark:border-sky-900/50 dark:bg-sky-900/30 dark:text-sky-50 shadow-sm'
+                                                : 'border-neutral-200 bg-white/40 text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900/30 dark:text-neutral-200'
+                                        }`}
+                                    >
+                                        {active && (
+                                            <span
+                                                aria-hidden
+                                                className="inline-block w-1.5 h-1.5 rounded-full bg-sky-500"
+                                            />
+                                        )}
+                                        {opt.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-neutral-400">No preferences found.</p>
+                    )}
+                </div>
+            </section>
 
-    fetchData();
-  }, [API_BASE, storedUserId, router]);
-
-  const toggleSelection = (id: string | number, type: 'sensitivity' | 'preference') => {
-    if (type === 'sensitivity') {
-      setSelectedSensitivities(prev =>
-        prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-      );
-    } else {
-      setSelectedPreferences(prev =>
-        prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-      );
-    }
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    setMessage('');
-    try {
-      let userId: string | number | null = storedUserId;
-      if (!userId) {
-        const me = await safeFetch(`${API_BASE}/auth/me`);
-        userId = me?.id ?? me?.user_id;
-        if (userId) localStorage.setItem('user_id', String(userId));
-      }
-      if (!userId) throw new Error('User not found.');
-
-      for (const prefId of selectedPreferences) {
-        try {
-          await safeFetch(`${API_BASE}/users/${userId}/preferences/${prefId}`, {
-            method: 'POST',
-          });
-        } catch (err) {
-          console.warn(`Preference ${prefId} mentése sikertelen:`, err);
-        }
-      }
-
-      for (const sensId of selectedSensitivities) {
-        try {
-          await safeFetch(`${API_BASE}/users/${userId}/sensitivities/${sensId}`, {
-            method: 'POST',
-          });
-        } catch (err) {
-          console.warn(`Sensitivity ${sensId} mentése sikertelen:`, err);
-        }
-      }
-
-      setMessage('✅ Preferences and sensitivities saved successfully!');
-
-      setTimeout(() => {
-        router.push('/');
-      }, 800);
-    } catch (err: unknown) {
-      if (err instanceof Error) setMessage(`❌ Error: ${err.message}`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (loading) return <p>Loading preferences...</p>;
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 space-y-6">
-      <p className="text-center text-gray-600 mb-4">
-        Here you can select your food sensitivities and meal preferences.
-      </p>
-
-      <section className="w-full max-w-md rounded border p-4">
-        <h2 className="text-lg font-medium mb-2 text-center">Food Sensitivities</h2>
-        {sensitivities.length > 0 ? (
-          <div className="flex flex-wrap gap-2 justify-center">
-            {sensitivities.map(opt => {
-              const active = selectedSensitivities.includes(opt.id);
-              return (
+            {/* actions */}
+            <div className="flex items-center gap-3">
                 <button
-                  key={opt.id}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => toggleSelection(opt.id, 'sensitivity')}
-                  className={`px-3 py-1.5 rounded-full border text-sm transition inline-flex items-center gap-1.5 ${
-                    active
-                      ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
-                      : 'border-neutral-300 bg-white text-neutral-700'
-                  }`}
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-white shadow hover:bg-emerald-700 disabled:opacity-60"
                 >
-                  {opt.label}
+                    {saving ? 'Saving…' : 'Save preferences'}
                 </button>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 text-center">No sensitivities found.</p>
-        )}
-      </section>
-
-      <section className="w-full max-w-md rounded border p-4">
-        <h2 className="text-lg font-medium mb-2 text-center">Meal Preferences</h2>
-        {preferences.length > 0 ? (
-          <div className="flex flex-wrap gap-2 justify-center">
-            {preferences.map(opt => {
-              const active = selectedPreferences.includes(opt.id);
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => toggleSelection(opt.id, 'preference')}
-                  className={`px-3 py-1.5 rounded-full border text-sm transition inline-flex items-center gap-1.5 ${
-                    active
-                      ? 'border-blue-400 bg-blue-50 text-blue-800'
-                      : 'border-neutral-300 bg-white text-neutral-700'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 text-center">No preferences found.</p>
-        )}
-      </section>
-
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-      >
-        {saving ? 'Saving...' : 'Save Preferences'}
-      </button>
-      {message && <p className="text-center mt-2">{message}</p>}
-    </div>
-  );
+                {message && <p className="text-sm text-neutral-500">{message}</p>}
+            </div>
+        </main>
+    );
 }

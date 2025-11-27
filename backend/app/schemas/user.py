@@ -16,16 +16,17 @@ class UserOut(BaseModel): # Schema a felhasználó kimenetéhez
 
 
 class Token(BaseModel): # Schema a token kimenetéhez
+    user_id: int | None = None
     access_token: str
     token_type: str = "bearer"
+    role_id: int | None = None
 
 class UserUpdateWithPassword(BaseModel):
     username: str | None = None
     email: EmailStr | None = None
     current_password: str = Field(..., min_length=6)
 
-class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+
 class UserUpdate(BaseModel):
     current_password: str
     full_name: str | None = None

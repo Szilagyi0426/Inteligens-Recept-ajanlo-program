@@ -83,7 +83,7 @@ source venv/bin/activate
     ```bash
     cd frontend
     npm install
-    npm start
+    npm run dev
     ```
    - Az alkalmazás most elérhető a `http://localhost:3000` címen.
 

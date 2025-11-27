@@ -113,8 +113,8 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         username=payload.username,
         email=payload.email,
         password_hash=hash_password(payload.password),
-        full_name=payload.full_name,
-        phone=payload.phone,
+        full_name="",
+        phone="",
     )
     db.add(user)
     db.commit()
@@ -128,7 +128,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not user or not verify_password(form_data.password, user.password_hash): # Ha nincs találat
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
     token = create_access_token(subject=user.id)
-    return {"access_token": token, "token_type": "bearer"} # OAuth2 szabvány
+    print(user.id)
+    return {"access_token": token, "role_id": user.role_id, "user_id": user.id, "token_type": "bearer"} # OAuth2 szabvány
 
 @auth_router.get("/me", response_model=UserOut) # Saját adatok lekérdezése
 def read_me(current_user: User = Depends(get_current_user)):
