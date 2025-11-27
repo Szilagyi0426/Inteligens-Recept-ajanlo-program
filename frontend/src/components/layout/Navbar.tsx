@@ -6,10 +6,7 @@ import {
     LuStarHalf
 } from 'react-icons/lu';
 import { LuChefHat } from 'react-icons/lu';
-import {
-    FaStar,
-    FaUserShield
-} from "react-icons/fa";
+import { LuShield } from 'react-icons/lu';
 
 function IconHome() {
   return (
@@ -34,7 +31,7 @@ export default function Navbar() { // Navigációs sáv a tetején
     const pathname = usePathname();
     if (pathname === '/login-page') return null;
     const [username, setUsername] = useState<string | null>(null);
-    const [role, setRole] = useState<number>(0);
+    const [userRole, setUserRole] = useState<number>(0); // 0: user, 1: moderator, 2: admin
 
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -56,33 +53,14 @@ export default function Navbar() { // Navigációs sáv a tetején
       };
     }, []);
 
-    useEffect(() => { // Felhasználónév lekérése localStorage-ból (vagy /me végpontról)
+    useEffect(() => { // Felhasználónév és szerepkör lekérése
         const token = localStorage.getItem('token');
         const user = localStorage.getItem('username');
-        const roleId = localStorage.getItem('role_id')
+        const role = localStorage.getItem('user_role');
         if (token && user) {
-          setUsername(user);
-            setRole(roleId ? Number(roleId) : 0);
-        }
-    }, []);
-
-    useEffect(() => {
-      function handleStorage(e: StorageEvent) {
-        if (e.key === 'token' || e.key === 'username') {
-          const token = localStorage.getItem('token');
-          const user = localStorage.getItem('username');
-            const roleId = localStorage.getItem('role_id')
-          if (token && user) {
             setUsername(user);
-              setRole(roleId ? Number(roleId) : 0);
-          } else {
-            setUsername(null);
-            setRole(0);
-          }
+            setUserRole(role ? parseInt(role) : 0);
         }
-      }
-      window.addEventListener('storage', handleStorage);
-      return () => window.removeEventListener('storage', handleStorage);
     }, []);
 
     function logout() { // Kijelentkezés
@@ -136,11 +114,45 @@ export default function Navbar() { // Navigációs sáv a tetején
                     <LuChefHat />
                     <span className="hidden sm:inline ">Recipes</span>
                 </button>
-                {username && (
-                  <button
-                      type="button"
-                      onClick={() => router.push('/shopping-list-page')}
-                      className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-m text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition active:scale-[.98]"
+                <button
+                    type="button"
+                    onClick={() => router.push('/main-page')}
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-m text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition active:scale-[.98]"
+                >
+                    
+                    <LuClipboardList  />
+                    <span className="hidden sm:inline">Shopping List</span>
+                </button>
+
+              {/* Moderator button - only visible for moderators and admins */}
+              {(userRole === 1 || userRole === 2) && (
+                <button
+                  type="button"
+                  onClick={() => router.push('/moderator-dashboard')}
+                  className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-m text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition active:scale-[.98]"
+                >
+                  <LuShield />
+                  <span className="hidden sm:inline">Moderator</span>
+                </button>
+              )}
+
+              {/* User avatar at the far right with dropdown */}
+              <div ref={menuRef} className="relative">
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="inline-flex items-center gap-2 rounded-full border border-neutral-200/60 dark:border-neutral-800/60 bg-white/70 dark:bg-neutral-900/60 px-2.5 py-1.5 text-m text-neutral-800 dark:text-neutral-100 shadow-sm hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition active:scale-[.98]"
+                >
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white shadow">
+                    {username ? username.charAt(0).toUpperCase() : 'U'}
+                  </span>
+                  <span className="hidden lg:block max-w-[14ch] truncate">{username ?? 'User'}</span>
+                  <svg
+                    viewBox="0 0 20 20"
+                    className={`h-4 w-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`}
+                    aria-hidden="true"
                   >
                       <LuClipboardList />
                       <span className="hidden sm:inline">Shopping List</span>

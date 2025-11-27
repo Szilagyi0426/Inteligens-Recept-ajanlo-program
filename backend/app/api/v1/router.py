@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from .endpoints import users, prefs, sens, history, recipe, shoppingList
+from .endpoints import users, prefs, sens, history, moderator, recipe, shoppingList
 from .endpoints.users import auth_router as auth
 from .endpoints.reset import reset_router
 
@@ -17,3 +17,6 @@ api_router.include_router(shoppingList.router, prefix="/shoppinglist", tags=["sh
 # auth
 api_router.include_router(auth, prefix="/auth", tags=["auth"]) # Hitelesítéshez kapcsolódó végpontok
 api_router.include_router(reset_router, prefix="/auth", tags=["auth"]) # Elfelejtett jelszó végpont
+
+# moderator
+api_router.include_router(moderator.router, prefix="/moderator", tags=["moderator"]) # Moderátori funkciók

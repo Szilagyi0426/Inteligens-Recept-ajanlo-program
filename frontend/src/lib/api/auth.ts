@@ -1,6 +1,16 @@
 // Az API alap URL-je környezeti változóból vagy alapértelmezett helyi címről
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000/api/v1'; 
 
+// /me végpont lekérése a felhasználó adataihoz
+export async function getCurrentUser(token: string) {
+    const res = await fetch(`${API_BASE}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+    }
+    return res.json();
+}
 
 // Bejelentkezési függvény, amely POST kérést küld a /auth/login végpontra
 export async function login(data: { username: string; password: string }) {
