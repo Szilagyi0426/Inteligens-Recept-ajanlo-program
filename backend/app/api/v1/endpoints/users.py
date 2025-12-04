@@ -200,3 +200,47 @@ def get_user_sensitivities(user_id: int, db: Session = Depends(get_db)):
         .all()
     )
     return [s[0] for s in sens]
+
+
+@router.get("/users/", response_model=list[UserOut])
+def get_all_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+
+    print("Current user from token:", current_user)
+    print("Current user ID:", current_user.id, "Role:", current_user.role_id)
+
+    if current_user.role_id != 2:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    users = db.query(User).all()
+    return users
+
+
+@router.put("/users/{user_id}/role")
+def update_user_role(user_id: int, payload: dict, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.role_id != 2:
+        raise HTTPException(status_code=403, detail="Only admin can change roles")
+
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    new_role = payload.get("role_id")
+    if new_role not in [0, 1, 2]:
+        raise HTTPException(status_code=400, detail="Invalid role_id")
+
+    user.role_id = new_role
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return {"message": "Role updated successfully", "role_id": user.role_id}
+
+@router.delete("/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.role_id != 2:
+        raise HTTPException(status_code=403, detail="Only admin can delete users")
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(user)
+    db.commit()
+    return {"message": "User deleted successfully"}
+

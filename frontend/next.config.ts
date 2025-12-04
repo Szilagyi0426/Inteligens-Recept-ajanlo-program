@@ -3,16 +3,14 @@ import withPWA from "next-pwa";
 
 const isProd = process.env.NODE_ENV === "production";
 
-// PWA plugin konfigurálása
 const withPWAPlugin = withPWA({
   dest: "public",
-  disable: !isProd, // PWA csak éles környezetben legyen engedélyezve
+  disable: !isProd,
 });
 
-const baseConfig: NextConfig = { // Alap Next.js konfiguráció
-  reactStrictMode: true, // React szigorú mód engedélyezése
+const baseConfig: NextConfig = {
+  reactStrictMode: true, 
   typedRoutes: true,
-  // Turbopack root beállítása a frontend mappára a workspace root warning eltávolításához
   turbopack: {
     root: __dirname,
   },

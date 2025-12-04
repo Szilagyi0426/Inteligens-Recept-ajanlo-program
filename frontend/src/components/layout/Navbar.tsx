@@ -25,6 +25,7 @@ function IconUserCircle() {
 
 import { usePathname } from 'next/navigation';
 import {StarIcon} from "lucide-react";
+import {FaUserShield} from "react-icons/fa";
 
 export default function Navbar() { // Navigációs sáv a tetején
     const router = useRouter();
@@ -68,7 +69,7 @@ export default function Navbar() { // Navigációs sáv a tetején
             localStorage.clear();
         } catch {}
         setUsername(null);
-        setRole(0);
+        setUserRole(0);
         
         try { // Esemény küldése a localStorage változásáról (más ablakoknak)
             window.dispatchEvent(new StorageEvent('storage', { key: 'token' }));
@@ -116,59 +117,25 @@ export default function Navbar() { // Navigációs sáv a tetején
                 </button>
                 <button
                     type="button"
-                    onClick={() => router.push('/main-page')}
+                    onClick={() => router.push('/shopping-list-page')}
                     className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-m text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition active:scale-[.98]"
                 >
                     
                     <LuClipboardList  />
                     <span className="hidden sm:inline">Shopping List</span>
                 </button>
+                 
 
-              {/* Moderator button - only visible for moderators and admins */}
-              {(userRole === 1 || userRole === 2) && (
-                <button
-                  type="button"
-                  onClick={() => router.push('/moderator-dashboard')}
-                  className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-m text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition active:scale-[.98]"
-                >
-                  <LuShield />
-                  <span className="hidden sm:inline">Moderator</span>
-                </button>
-              )}
-
-              {/* User avatar at the far right with dropdown */}
-              <div ref={menuRef} className="relative">
-                <button
-                  type="button"
-                  aria-haspopup="menu"
-                  aria-expanded={menuOpen}
-                  onClick={() => setMenuOpen((v) => !v)}
-                  className="inline-flex items-center gap-2 rounded-full border border-neutral-200/60 dark:border-neutral-800/60 bg-white/70 dark:bg-neutral-900/60 px-2.5 py-1.5 text-m text-neutral-800 dark:text-neutral-100 shadow-sm hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition active:scale-[.98]"
-                >
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white shadow">
-                    {username ? username.charAt(0).toUpperCase() : 'U'}
-                  </span>
-                  <span className="hidden lg:block max-w-[14ch] truncate">{username ?? 'User'}</span>
-                  <svg
-                    viewBox="0 0 20 20"
-                    className={`h-4 w-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`}
-                    aria-hidden="true"
+              {username && (
+                  <button
+                      type="button"
+                      onClick={() => router.push('/favorites-page')}
+                      className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-m text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition active:scale-[.98]"
                   >
-                      <LuClipboardList />
-                      <span className="hidden sm:inline">Shopping List</span>
+                      <StarIcon />
+                      <span className="hidden sm:inline">Favorties</span>
                   </button>
-                )}
-
-                {username && (
-                    <button
-                        type="button"
-                        onClick={() => router.push('/favorites-page')}
-                        className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-m text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition active:scale-[.98]"
-                    >
-                        <FaStar />
-                        <span className="hidden sm:inline">Favorties</span>
-                    </button>
-                )}
+              )}
 
               {/* User avatar at the far right with dropdown */}
               {username ? (
@@ -207,10 +174,10 @@ export default function Navbar() { // Navigációs sáv a tetején
                         <IconUserCircle />
                         <span>Profile</span>
                       </button>
-                      {role === 1 && (
+                      {userRole === 1 && (
                         <button
                           type="button"
-                          onClick={() => { setMenuOpen(false); router.push('/moderator'); }}
+                          onClick={() => { setMenuOpen(false); router.push('/moderator-dashboard'); }}
                           className="flex w-full items-center gap-2 px-3 py-2 text-m text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition"
                           role="menuitem"
                         >
@@ -220,7 +187,7 @@ export default function Navbar() { // Navigációs sáv a tetején
                           <span>Moderator</span>
                         </button>
                       )}
-                      {role === 2 && (
+                      {userRole === 2 && (
                         <>
                           <button
                             type="button"
@@ -233,7 +200,7 @@ export default function Navbar() { // Navigációs sáv a tetején
                           </button>
                           <button
                             type="button"
-                            onClick={() => { setMenuOpen(false); router.push('/moderator-page'); }}
+                            onClick={() => { setMenuOpen(false); router.push('/moderator-dashboard'); }}
                             className="flex w-full items-center gap-2 px-3 py-2 text-m text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition"
                             role="menuitem"
                           >
