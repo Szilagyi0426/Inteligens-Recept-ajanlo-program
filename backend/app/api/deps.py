@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login") # OAuth2 jelszavas bejelentkezés token URL-je
+optional_oauth2_scheme = HTTPBearer(auto_error=False) # Opcionális OAuth2 séma
 
 def get_db(): # Adatbázis kapcsolat kezelése
     db = SessionLocal()
@@ -41,3 +42,22 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise credentials_exception # Ha a felhasználó nem létezik, kivétel dobása
     return user
+
+def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_oauth2_scheme),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """Opcionális user lekérés - nem dob hibát, ha nincs token"""
+    if credentials is None:
+        return None
+    
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        sub: str | None = payload.get("sub")
+        if sub is None:
+            return None
+        user = db.get(User, int(sub))
+        return user
+    except (JWTError, ValueError):
+        return None

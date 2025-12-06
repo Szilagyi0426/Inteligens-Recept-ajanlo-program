@@ -12,6 +12,8 @@ class RecipeBase(BaseModel):
     servings: Optional[int] = None
     total_minutes: Optional[int] = None
     visibility: Optional[str] = None
+    dietary_tags: Optional[List[str]] = None
+    allergens: Optional[List[str]] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     average_rating: Optional[float] = None
@@ -69,6 +71,8 @@ class RecipeOut(BaseModel):
     cook_minutes: Optional[int] = None
     total_minutes: Optional[int] = None
     visibility: Optional[str] = None
+    dietary_tags: Optional[List[str]] = None
+    allergens: Optional[List[str]] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     is_favorite: Optional[bool] = None

@@ -24,7 +24,7 @@ function IconUserCircle() {
 }
 
 import { usePathname } from 'next/navigation';
-import {StarIcon} from "lucide-react";
+import {StarIcon, Search} from "lucide-react";
 import {FaUserShield} from "react-icons/fa";
 
 export default function Navbar() { // Navigációs sáv a tetején
@@ -55,13 +55,32 @@ export default function Navbar() { // Navigációs sáv a tetején
     }, []);
 
     useEffect(() => { // Felhasználónév és szerepkör lekérése
-        const token = localStorage.getItem('token');
-        const user = localStorage.getItem('username');
-        const role = localStorage.getItem('user_role');
-        if (token && user) {
-            setUsername(user);
-            setUserRole(role ? parseInt(role) : 0);
-        }
+        const checkAuth = () => {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('username');
+            const role = localStorage.getItem('user_role');
+            
+            if (token && user) {
+                setUsername(user);
+                setUserRole(role ? parseInt(role) : 0);
+            } else {
+                setUsername(null);
+                setUserRole(0);
+            }
+        };
+        
+        // Initial check
+        checkAuth();
+        
+        // Listen for storage changes (from other tabs or logout)
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'token' || e.key === 'username' || e.key === 'user_role') {
+                checkAuth();
+            }
+        };
+        
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
     function logout() { // Kijelentkezés
@@ -114,6 +133,14 @@ export default function Navbar() { // Navigációs sáv a tetején
                 >
                     <LuChefHat />
                     <span className="hidden sm:inline ">Recipes</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={() => router.push('/search-recipes')}
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-m text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition active:scale-[.98]"
+                >
+                    <Search />
+                    <span className="hidden sm:inline">Search</span>
                 </button>
                 <button
                     type="button"
