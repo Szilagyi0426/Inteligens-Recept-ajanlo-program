@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, BigInteger, Integer, String, Text, Enum, DateTime, ForeignKey
+from sqlalchemy import Column, BigInteger, Integer, String, Text, Enum, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from . import Base
 from .recipe_step import RecipeStep
@@ -17,6 +17,8 @@ class Recipe(Base):
     total_minutes = Column(Integer)  # opcionálisan számolható
     visibility = Column(Enum("public", "pending", "hidden", name="recipe_visibility"),
                         nullable=False, default="public")
+    dietary_tags = Column(JSON, nullable=True)  # pl. ["vegetarian", "vegan", "gluten-free"]
+    allergens = Column(JSON, nullable=True)  # pl. ["gluten", "lactose", "shellfish"]
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -1,7 +1,7 @@
 """Seed ~20 recipes with ingredients and steps (author_id=0)
 
 Revision ID: 20251018_20_recipes
-Revises: 20251018_seed_units
+Revises: 2deb82716480
 Create Date: 2025-10-18 20:10:00
 """
 from alembic import op
@@ -9,7 +9,7 @@ import sqlalchemy as sa
 from datetime import datetime
 
 revision = "20251018_20_recipes"
-down_revision = "20251018_seed_units"   # <-- ÁLLÍTSD, ha más az előző rev!
+down_revision = "2deb82716480"   # <-- ÁLLÍTSD, ha más az előző rev!
 branch_labels = None
 depends_on = None
 
